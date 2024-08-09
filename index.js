@@ -12,42 +12,46 @@ bot.use(hydrate());
 bot.api.setMyCommands([
 	{
 		command: 'start',
-		description: 'Старт бота',
-	},
-	{
-		command: 'menu',
-		description: 'Главное меню',
+		description: 'Открыть меню',
 	}
+	// {
+	// 	command: 'menu',
+	// 	description: 'Главное меню',
+	// }
 ])
 
 
 // Вешаем слушателя на конкретную команду тг
 
-bot.command('start', async (ctx) => {
-	await ctx.react("❤")
-	await ctx.reply('<b>HelloSkillsWeb</b> приветствует Вас, выберите подходящую команду бота', {
-		parse_mode: 'HTML'
-	})
-});
+// bot.command('start', async (ctx) => {
+// 	await ctx.react("❤")
+// 	await ctx.reply('<b>HelloSkillsWeb</b> приветствует Вас, выберите подходящую команду бота', {
+// 		parse_mode: 'HTML'
+// 	})
+// });
 
-const menuKeyboard = new InlineKeyboard()
-	.text('Собачки', 'dogs')
 // .text('Скоро сделаем', 'soon')
 
 // const backKeyboard = new InlineKeyboard().text('< Назад в меню', 'back')
 
-bot.command('menu', async (ctx) => {
-	await ctx.reply('Нажмите кнопку', {
+const menuKeyboard = new InlineKeyboard().text('Собачки', 'dogs')
+
+
+bot.command('start', async (ctx) => {
+	await ctx.react("❤")
+	await ctx.reply(`*Нажмите кнопку*`, {
+		parse_mode: 'MarkdownV2',
 		reply_markup: menuKeyboard,
 	});
 });
 
 bot.callbackQuery('dogs', async (ctx) => {
 	// await ctx.react("❤");
+	const updatedKeyboard = new InlineKeyboard().text('Еще собачек', 'dogs');
 	let response = await fetch('https://dog.ceo/api/breeds/image/random');
 	response = await response.json();
-	ctx.reply(response.message, {
-		reply_markup: menuKeyboard,
+	ctx.replyWithPhoto(response.message, {
+		reply_markup: updatedKeyboard,
 	})
 
 })
