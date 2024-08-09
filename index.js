@@ -16,7 +16,7 @@ bot.api.setMyCommands([
 	},
 	{
 		command: 'menu',
-		description: 'Меню бота',
+		description: 'Главное меню',
 	}
 ])
 
@@ -31,38 +31,82 @@ bot.command('start', async (ctx) => {
 });
 
 const menuKeyboard = new InlineKeyboard()
-	.text('Узнать статус заказа', 'order-status')
-	.text('Обратиться в поддержку', 'support')
+	.text('Собачки', 'dogs')
+// .text('Скоро сделаем', 'soon')
 
-const backKeyboard = new InlineKeyboard().text('< Назад в меню', 'back')
+// const backKeyboard = new InlineKeyboard().text('< Назад в меню', 'back')
 
 bot.command('menu', async (ctx) => {
-	await ctx.reply('Выберите пункт меню', {
+	await ctx.reply('Нажмите кнопку', {
 		reply_markup: menuKeyboard,
 	});
 });
 
-bot.callbackQuery('order-status', async (ctx) => {
-	await ctx.callbackQuery.message.editText('Статус заказа: в пути', {
-		reply_markup: backKeyboard,
-	})
-	await ctx.answerCallbackQuery();
-})
-
-bot.callbackQuery('support', async (ctx) => {
-	await ctx.callbackQuery.message.editText('Напишите Ваш запрос', {
-		reply_markup: backKeyboard,
-	})
-	await ctx.answerCallbackQuery();
-})
-
-bot.callbackQuery('back', async (ctx) => {
-	await ctx.callbackQuery.message.editText('Выберите пункт меню', {
+bot.callbackQuery('dogs', async (ctx) => {
+	// await ctx.react("❤");
+	let response = await fetch('https://dog.ceo/api/breeds/image/random');
+	response = await response.json();
+	ctx.reply(response.message, {
 		reply_markup: menuKeyboard,
 	})
-	await ctx.answerCallbackQuery();
+
 })
 
+// bot.callbackQuery('soon', async (ctx) => {
+// 	await ctx.callbackQuery.message.editText('Кнопка скоро будет доступна', {
+// 		reply_markup: backKeyboard,
+// 	})
+// 	await ctx.answerCallbackQuery();
+// })
+
+// bot.callbackQuery('back', async (ctx) => {
+// 	await ctx.callbackQuery.message.editText('Выберите пункт меню', {
+// 		reply_markup: menuKeyboard,
+// 	})
+// 	await ctx.answerCallbackQuery();
+// })
+
+// const data = fetch('https://jsonplaceholder.typicode.com/users')
+// 	.then((data) => {
+// 		return data.json();
+// 	})
+// 	.then((info) => {
+// 		console.log(info)
+// 	})
+
+// bot.command('fetch', async (ctx) => {
+// 	await ctx.react("❤");
+
+// 	try {
+// 		// Fetch the data from the API
+// 		const response = await fetch('https://dog.ceo/api/breeds/image/random');
+// 		const data = await response.json();
+
+// 		// Reply with the fetched data
+// 		await ctx.reply(JSON.stringify(data, null, 2)); // Format JSON for readability
+// 	} catch (error) {
+// 		// Handle any errors
+// 		await ctx.reply('An error occurred while fetching data.');
+// 		console.error(error);
+// 	}
+// });
+
+
+// bot.command('fetch', async (ctx) => {
+// 	await ctx.react("❤");
+
+// 	let response = await fetch('https://dog.ceo/api/breeds/image/random');
+// 	response = await response.json();
+
+// 	// Reply with the fetched data
+// 	ctx.reply(response.message); // Format JSON for readability
+
+// })
+
+// bot.command('fetch', async (ctx) => {
+// 	await ctx.react("❤")
+// 	await ctx.reply(ctx.from)
+// });
 
 // Обработчик ошибок
 
