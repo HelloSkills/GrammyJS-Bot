@@ -29,7 +29,7 @@ const menuKeyboard = new InlineKeyboard()
 bot.command('start', async (ctx) => {
 	await ctx.react("❤")
 
-	logMessage(ctx);
+	logMessage(ctx, "start");
 
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запустил бота командой start`);
 	await ctx.reply(`*Нажмите кнопку*`, {
@@ -46,7 +46,7 @@ bot.callbackQuery('dogs', async (ctx) => {
 	response = await response.json();
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё собачек`);
 
-	logMessage(ctx);
+	logMessage(ctx, "собачек");
 
 
 	ctx.replyWithPhoto(response.message, {
@@ -64,7 +64,7 @@ bot.callbackQuery('cats', async (ctx) => {
 
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё котиков`);
 
-	logMessage(ctx);
+	logMessage(ctx, "кошечек");
 
 
 	ctx.replyWithPhoto(response[0].url, {
@@ -103,15 +103,17 @@ bot.on('msg', async (ctx) => {
 
 // Логируем в файлик (функция)
 
-function logMessage(ctx) {
+function logMessage(ctx, action) {
 	const logFilePath = path.join(__dirname, 'Logs', 'logs.txt'); // путь к файлу логов
 	let logEntry = "";
 
-	if (ctx.from?.username && ctx.from?.id && ctx.message?.text) {
-		logEntry = `${ctx.from.username} | ID: ${ctx.from.id} | Message: ${ctx.message.text} | Date: ${new Date().toISOString()}\n`;
-
+	if (action) {
+		logEntry = `${ctx.from.username} | ID: ${ctx.from.id} | Выбрал "${action}" | Date: ${new Date().toISOString()}\n`;
+	}
+	else if (ctx.from?.username && ctx.from?.id && ctx.message?.text) {
+		logEntry = `${ctx.from.username} | ID: ${ctx.from.id} | Написал: "${ctx.message.text}" | Date: ${new Date().toISOString()}\n`;
 	} else {
-		logEntry = `${ctx.from.username} | ID: ${ctx.from.id} | Нажал кнопку | Date: ${new Date().toISOString()}\n`;
+		logEntry = `${ctx.from.username} | ID: ${ctx.from.id} | Что-то блять нажал | Date: ${new Date().toISOString()}\n`;
 	}
 
 	fs.appendFile(logFilePath, logEntry, (err) => {
