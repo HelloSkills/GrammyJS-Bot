@@ -22,9 +22,9 @@ bot.api.setMyCommands([
 ])
 
 const menuKeyboard = new InlineKeyboard()
-	.text('Собачки', 'dogs')
-	.text('Котики', 'cats')
-
+	.text('Собачки', 'dogs').row()
+	.text('Котики', 'cats').row()
+	.text('Да или нет?', 'yon').row()
 
 bot.command('start', async (ctx) => {
 	await ctx.react("❤")
@@ -41,7 +41,9 @@ bot.command('start', async (ctx) => {
 // Callback на собачек
 
 bot.callbackQuery('dogs', async (ctx) => {
-	const updatedKeyboard = new InlineKeyboard().text('Еще собачек', 'dogs').text('Теперь котиков', 'cats')
+	const updatedKeyboard = new InlineKeyboard().text('Еще собачек', 'dogs').row()
+		.text('Теперь котиков', 'cats').row()
+		.text('Да / Нет', 'yon').row()
 	let response = await fetch('https://dog.ceo/api/breeds/image/random');
 	response = await response.json();
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё собачек`);
@@ -57,7 +59,9 @@ bot.callbackQuery('dogs', async (ctx) => {
 // Callback на котиков
 
 bot.callbackQuery('cats', async (ctx) => {
-	const updatedKeyboard = new InlineKeyboard().text('Ещё котиков', 'cats').text('Теперь собачек', 'dogs');
+	const updatedKeyboard = new InlineKeyboard().text('Ещё котиков', 'cats').row()
+		.text('Теперь собачек', 'dogs').row()
+		.text('Да / Нет', 'yon').row()
 
 	let response = await fetch('https://api.thecatapi.com/v1/images/search');
 	response = await response.json();
@@ -70,6 +74,27 @@ bot.callbackQuery('cats', async (ctx) => {
 	ctx.replyWithPhoto(response[0].url, {
 		reply_markup: updatedKeyboard,
 	})
+})
+
+// Callback на котиков
+
+bot.callbackQuery('yon', async (ctx) => {
+	const updatedKeyboard = new InlineKeyboard().text('Да / Нет', 'yon').row()
+		.text('Теперь кошечек', 'cats').row()
+		.text('Теперь собачек', 'dogs').row();
+
+	let response = await fetch('https://yesno.wtf/api');
+	response = await response.json();
+
+	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} выбрал "Да" или "Нет"`);
+
+	await ctx.reply(`Судьба говорит ${response.answer}`)
+	await ctx.replyWithPhoto(response.image, {
+		reply_markup: updatedKeyboard,
+	})
+
+	logMessage(ctx, "Да или Нет");
+
 })
 
 //API authorization temp
