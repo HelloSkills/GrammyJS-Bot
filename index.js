@@ -18,10 +18,9 @@ bot.api.setMyCommands([
 	// }
 ])
 
-const menuKeyboard = new InlineKeyboard().text('Собачки', 'dogs')
-
-
-// Логируемся
+const menuKeyboard = new InlineKeyboard()
+	.text('Собачки', 'dogs')
+	.text('Котики', 'cats')
 
 
 bot.command('start', async (ctx) => {
@@ -33,8 +32,10 @@ bot.command('start', async (ctx) => {
 	});
 });
 
+// Callback на собачек
+
 bot.callbackQuery('dogs', async (ctx) => {
-	const updatedKeyboard = new InlineKeyboard().text('Еще собачек', 'dogs');
+	const updatedKeyboard = new InlineKeyboard().text('Еще собачек', 'dogs').text('Теперь котиков', 'cats')
 	let response = await fetch('https://dog.ceo/api/breeds/image/random');
 	response = await response.json();
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё собачек`);
@@ -43,9 +44,26 @@ bot.callbackQuery('dogs', async (ctx) => {
 	})
 })
 
+// Callback на котиков
+
+bot.callbackQuery('cats', async (ctx) => {
+	const updatedKeyboard = new InlineKeyboard().text('Ещё котиков', 'cats').text('Теперь собачек', 'dogs');
+
+	let response = await fetch('https://api.thecatapi.com/v1/images/search');
+	response = await response.json();
+
+	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё котиков`);
+	ctx.replyWithPhoto(response[0].url, {
+		reply_markup: updatedKeyboard,
+	})
+})
+
+// Логируемся
+
 bot.on('msg', async (ctx) => {
-	console.log(`Пользователь с ID: ${ctx.from.id} написал текст ${ctx.message.text}`);
-	// await ctx.reply(ctx.message.text)
+	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} написал текст "${ctx.message.text}"`)
+	// await ctx.reply(ctx.message.text) 
+	// ctx.reply - для ответа клиенту
 });
 
 // Обработчик ошибок
