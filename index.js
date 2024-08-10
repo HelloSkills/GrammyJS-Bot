@@ -1,8 +1,9 @@
 // Соединяем бота
 require('dotenv').config();
-const { Bot, GrammyError, HttpError, Keyboard, InlineKeyboard } = require('grammy');
+const { Bot, GrammyError, HttpError, InlineKeyboard, Keyboard } = require('grammy');
 const { hydrate } = require('@grammyjs/hydrate');
 const bot = new Bot(process.env.BOT_API_KEY);
+const catApi = process.env.CAT_API;
 bot.use(hydrate());
 
 // Вешаем команды и их описание
@@ -58,7 +59,27 @@ bot.callbackQuery('cats', async (ctx) => {
 	})
 })
 
-// Логируемся
+//API authorization temp
+
+// bot.callbackQuery('cats', async (ctx) => {
+// 	const updatedKeyboard = new InlineKeyboard().text('Ещё котиков', 'cats').text('Теперь собачек', 'dogs');
+
+// 	let response = await fetch('https://api.thecatapi.com/v1/images/search?limit=15&breed_ids=beng', {
+// 		headers: {
+// 			'x-api-key': catApi
+// 			// в x-api-key передаём наш API_KEY от Cat в catApi
+// 		}
+// 	});
+// 	response = await response.json();
+// 	// console.log(response);
+// 	ctx.reply(response.map(item => item.url), {
+// 		reply_markup: updatedKeyboard,
+// 	})
+// })
+
+
+
+// Логируем текст
 
 bot.on('msg', async (ctx) => {
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} написал текст "${ctx.message.text}"`)
