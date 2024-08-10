@@ -86,10 +86,10 @@ bot.callbackQuery('yon', async (ctx) => {
 	let response = await fetch('https://yesno.wtf/api');
 	response = await response.json();
 
-	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} выбрал "Да" или "Нет"`);
+	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} выбрал "Да или Нет"`);
 
-	await ctx.reply(`Судьба говорит ${response.answer}`)
-	await ctx.replyWithPhoto(response.image, {
+	await ctx.reply(`Судьба говорит "${response.answer}"`)
+	await ctx.replyWithAnimation(response.image, {
 		reply_markup: updatedKeyboard,
 	})
 
