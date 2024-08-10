@@ -4,6 +4,8 @@ const { Bot, GrammyError, HttpError, InlineKeyboard, Keyboard } = require('gramm
 const { hydrate } = require('@grammyjs/hydrate');
 const bot = new Bot(process.env.BOT_API_KEY);
 const catApi = process.env.CAT_API;
+const fs = require('fs');
+const path = require('path');
 bot.use(hydrate());
 
 // Вешаем команды и их описание
@@ -26,6 +28,9 @@ const menuKeyboard = new InlineKeyboard()
 
 bot.command('start', async (ctx) => {
 	await ctx.react("❤")
+
+	logMessage(ctx);
+
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запустил бота командой start`);
 	await ctx.reply(`*Нажмите кнопку*`, {
 		parse_mode: 'MarkdownV2',
@@ -40,6 +45,10 @@ bot.callbackQuery('dogs', async (ctx) => {
 	let response = await fetch('https://dog.ceo/api/breeds/image/random');
 	response = await response.json();
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё собачек`);
+
+	logMessage(ctx);
+
+
 	ctx.replyWithPhoto(response.message, {
 		reply_markup: updatedKeyboard,
 	})
@@ -54,6 +63,10 @@ bot.callbackQuery('cats', async (ctx) => {
 	response = await response.json();
 
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё котиков`);
+
+	logMessage(ctx);
+
+
 	ctx.replyWithPhoto(response[0].url, {
 		reply_markup: updatedKeyboard,
 	})
@@ -77,15 +90,49 @@ bot.callbackQuery('cats', async (ctx) => {
 // 	})
 // })
 
-
-
 // Логируем текст
 
 bot.on('msg', async (ctx) => {
+
+	logMessage(ctx);
+
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} написал текст "${ctx.message.text}"`)
 	// await ctx.reply(ctx.message.text) 
 	// ctx.reply - для ответа клиенту
 });
+
+// Логируем в файлик (функция)
+
+function logMessage(ctx) {
+	const logFilePath = path.join(__dirname, 'Logs', 'logs.txt'); // путь к файлу логов
+	let logEntry = "";
+
+	if (ctx.from?.username && ctx.from?.id && ctx.message?.text) {
+		logEntry = `${ctx.from.username} | ID: ${ctx.from.id} | Message: ${ctx.message.text} | Date: ${new Date().toISOString()}\n`;
+
+	} else {
+		logEntry = `${ctx.from.username} | ID: ${ctx.from.id} | Нажал кнопку | Date: ${new Date().toISOString()}\n`;
+	}
+
+	fs.appendFile(logFilePath, logEntry, (err) => {
+		if (err) {
+			console.error('Ошибка при записи в файл лога:', err);
+		}
+	});
+}
+
+// function logMessage(userNickname, userId, message) {
+// 	const logFilePath = path.join(__dirname, 'Logs', 'logs.txt'); // путь к файлу логов
+// 	const logEntry = `${userNickname} | ID: ${userId} | Message: ${message} | Date: ${new Date().toISOString()}\n`;
+
+// 	fs.appendFile(logFilePath, logEntry, (err) => {
+// 		if (err) {
+// 			console.error('Ошибка при записи в файл лога:', err);
+// 		}
+// 	});
+// }
+
+
 
 // Обработчик ошибок
 
