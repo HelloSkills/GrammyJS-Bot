@@ -21,8 +21,12 @@ bot.api.setMyCommands([
 const menuKeyboard = new InlineKeyboard().text('Собачки', 'dogs')
 
 
+// Логируемся
+
+
 bot.command('start', async (ctx) => {
 	await ctx.react("❤")
+	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запустил бота командой start`);
 	await ctx.reply(`*Нажмите кнопку*`, {
 		parse_mode: 'MarkdownV2',
 		reply_markup: menuKeyboard,
@@ -33,11 +37,16 @@ bot.callbackQuery('dogs', async (ctx) => {
 	const updatedKeyboard = new InlineKeyboard().text('Еще собачек', 'dogs');
 	let response = await fetch('https://dog.ceo/api/breeds/image/random');
 	response = await response.json();
+	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё собачек`);
 	ctx.replyWithPhoto(response.message, {
 		reply_markup: updatedKeyboard,
 	})
-
 })
+
+bot.on('msg', async (ctx) => {
+	console.log(`Пользователь с ID: ${ctx.from.id} написал текст ${ctx.message.text}`);
+	// await ctx.reply(ctx.message.text)
+});
 
 // Обработчик ошибок
 
