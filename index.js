@@ -44,7 +44,18 @@ bot.callbackQuery('dogs', async (ctx) => {
 	const updatedKeyboard = new InlineKeyboard().text('Еще собачек', 'dogs').row()
 		.text('Теперь котиков', 'cats').row()
 		.text('Да / Нет', 'yon').row()
-	let response = await fetch('https://dog.ceo/api/breeds/image/random');
+
+	let urlApi = '';
+
+	if (ctx.from.id === 575145613) {
+		urlApi = 'https://dog.ceo/api/breed/bulldog/french/images/random'
+	} else if (ctx.from.id === 468883364) {
+		urlApi = 'https://dog.ceo/api/breed/doberman/images/random'
+	} else {
+		urlApi = 'https://dog.ceo/api/breeds/image/random'
+	}
+
+	let response = await fetch(urlApi);
 	response = await response.json();
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё собачек`);
 
@@ -54,7 +65,10 @@ bot.callbackQuery('dogs', async (ctx) => {
 	ctx.replyWithPhoto(response.message, {
 		reply_markup: updatedKeyboard,
 	})
+
+
 })
+
 
 // Callback на котиков
 
@@ -76,7 +90,7 @@ bot.callbackQuery('cats', async (ctx) => {
 	})
 })
 
-// Callback на котиков
+// Callback на Y or N
 
 bot.callbackQuery('yon', async (ctx) => {
 	const updatedKeyboard = new InlineKeyboard().text('Да / Нет', 'yon').row()
@@ -96,6 +110,7 @@ bot.callbackQuery('yon', async (ctx) => {
 	logMessage(ctx, "Да или Нет");
 
 })
+
 
 //API authorization temp
 
