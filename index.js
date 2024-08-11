@@ -2,6 +2,7 @@
 require('dotenv').config();
 const { Bot, GrammyError, HttpError, InlineKeyboard, Keyboard } = require('grammy');
 const { hydrate } = require('@grammyjs/hydrate');
+const axios = require('axios');
 const bot = new Bot(process.env.BOT_API_KEY);
 const catApi = process.env.CAT_API;
 const fs = require('fs');
@@ -15,10 +16,6 @@ bot.api.setMyCommands([
 		command: 'start',
 		description: 'Открыть меню',
 	}
-	// {
-	// 	command: 'menu',
-	// 	description: 'Главное меню',
-	// }
 ])
 
 const menuKeyboard = new InlineKeyboard()
@@ -48,21 +45,24 @@ bot.callbackQuery('dogs', async (ctx) => {
 	let urlApi = '';
 
 	if (ctx.from.id === 575145613) {
+		// Макс
 		urlApi = 'https://dog.ceo/api/breed/bulldog/french/images/random'
 	} else if (ctx.from.id === 468883364) {
+		// Сашка
 		urlApi = 'https://dog.ceo/api/breed/doberman/images/random'
 	} else {
+		// Люди
 		urlApi = 'https://dog.ceo/api/breeds/image/random'
 	}
 
-	let response = await fetch(urlApi);
-	response = await response.json();
+	const response = await axios.get(urlApi)
+
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё собачек`);
 
 	logMessage(ctx, "собачек");
 
 
-	ctx.replyWithPhoto(response.message, {
+	ctx.replyWithPhoto(response.data.message, {
 		reply_markup: updatedKeyboard,
 	})
 
@@ -77,15 +77,15 @@ bot.callbackQuery('cats', async (ctx) => {
 		.text('Теперь собачек', 'dogs').row()
 		.text('Да / Нет', 'yon').row()
 
-	let response = await fetch('https://api.thecatapi.com/v1/images/search');
-	response = await response.json();
+	const urlApi = 'https://api.thecatapi.com/v1/images/search'
+
+	const response = await axios.get(urlApi)
 
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} запросил ещё котиков`);
 
 	logMessage(ctx, "кошечек");
 
-
-	ctx.replyWithPhoto(response[0].url, {
+	ctx.replyWithPhoto(response.data[0].url, {
 		reply_markup: updatedKeyboard,
 	})
 })
@@ -97,19 +97,23 @@ bot.callbackQuery('yon', async (ctx) => {
 		.text('Теперь кошечек', 'cats').row()
 		.text('Теперь собачек', 'dogs').row();
 
-	let response = await fetch('https://yesno.wtf/api');
-	response = await response.json();
+	const urlApi = 'https://yesno.wtf/api';
+
+	const response = await axios.get(urlApi);
 
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} выбрал "Да или Нет"`);
 
-	await ctx.reply(`Судьба говорит "${response.answer}"`)
-	await ctx.replyWithAnimation(response.image, {
+	await ctx.reply(`Судьба говорит "${response.data.answer}"`)
+	await ctx.replyWithAnimation(response.data.image, {
 		reply_markup: updatedKeyboard,
 	})
 
 	logMessage(ctx, "Да или Нет");
 
 })
+
+// Callback Temp
+
 
 
 //API authorization temp
@@ -162,19 +166,6 @@ function logMessage(ctx, action) {
 		}
 	});
 }
-
-// function logMessage(userNickname, userId, message) {
-// 	const logFilePath = path.join(__dirname, 'Logs', 'logs.txt'); // путь к файлу логов
-// 	const logEntry = `${userNickname} | ID: ${userId} | Message: ${message} | Date: ${new Date().toISOString()}\n`;
-
-// 	fs.appendFile(logFilePath, logEntry, (err) => {
-// 		if (err) {
-// 			console.error('Ошибка при записи в файл лога:', err);
-// 		}
-// 	});
-// }
-
-
 
 // Обработчик ошибок
 
