@@ -7,6 +7,7 @@ const bot = new Bot(process.env.BOT_API_KEY);
 const dogApiMain = process.env.API_DOG_MAIN;
 const dogApiSasha = process.env.API_DOG_SASHA;
 const dogApiMax = process.env.API_DOG_MAX;
+const ynApi = process.env.API_YN;
 const fs = require('fs');
 const path = require('path');
 bot.use(hydrate());
@@ -79,7 +80,7 @@ bot.callbackQuery('cats', async (ctx) => {
 		.text('Теперь собачек', 'dogs').row()
 		.text('Да / Нет', 'yon').row()
 
-	const urlApi = 'https://api.thecatapi.com/v1/images/search'
+	const urlApi = ynApi
 
 	const response = await axios.get(urlApi)
 
