@@ -4,7 +4,9 @@ const { Bot, GrammyError, HttpError, InlineKeyboard, Keyboard } = require('gramm
 const { hydrate } = require('@grammyjs/hydrate');
 const axios = require('axios');
 const bot = new Bot(process.env.BOT_API_KEY);
-const catApi = process.env.CAT_API;
+const dogApiMain = process.env.API_DOG_MAIN;
+const dogApiSasha = process.env.API_DOG_SASHA;
+const dogApiMax = process.env.API_DOG_MAX;
 const fs = require('fs');
 const path = require('path');
 bot.use(hydrate());
@@ -46,13 +48,13 @@ bot.callbackQuery('dogs', async (ctx) => {
 
 	if (ctx.from.id === 575145613) {
 		// Макс
-		urlApi = 'https://dog.ceo/api/breed/bulldog/french/images/random'
+		urlApi = dogApiMax
 	} else if (ctx.from.id === 468883364) {
 		// Сашка
-		urlApi = 'https://dog.ceo/api/breed/doberman/images/random'
+		urlApi = dogApiSasha
 	} else {
 		// Люди
-		urlApi = 'https://dog.ceo/api/breeds/image/random'
+		urlApi = dogApiMain
 	}
 
 	const response = await axios.get(urlApi)
