@@ -2,12 +2,16 @@
 require('dotenv').config();
 const { Bot, GrammyError, HttpError, InlineKeyboard, Keyboard } = require('grammy');
 const { hydrate } = require('@grammyjs/hydrate');
+const cron = require('node-cron');
 const axios = require('axios');
+
 const bot = new Bot(process.env.BOT_API_KEY);
 const dogApiMain = process.env.API_DOG_MAIN;
 const dogApiSasha = process.env.API_DOG_SASHA;
 const dogApiMax = process.env.API_DOG_MAX;
+const dogApiNazar = process.env.API_DOG_NAZAR;
 const ynApi = process.env.API_YN;
+
 const fs = require('fs');
 const path = require('path');
 bot.use(hydrate());
@@ -38,6 +42,18 @@ bot.command('start', async (ctx) => {
 	});
 });
 
+// Cron test
+
+async function sendMessageToClient() {
+	console.log("Cron job executed");
+	const chatId = process.env.CHAT_ID;
+	const message = 'Всё работает';
+
+	await bot.api.sendMessage(chatId, message);
+}
+
+cron.schedule('*/1 * * * *', sendMessageToClient);
+
 // Callback на собачек
 
 bot.callbackQuery('dogs', async (ctx) => {
@@ -53,6 +69,9 @@ bot.callbackQuery('dogs', async (ctx) => {
 	} else if (ctx.from.id === 468883364) {
 		// Сашка
 		urlApi = dogApiSasha
+	} else if (ctx.from.id === 1078739693) {
+		// Назар
+		urlApi = dogApiNazar
 	} else {
 		// Люди
 		urlApi = dogApiMain
