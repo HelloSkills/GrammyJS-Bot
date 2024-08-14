@@ -6,6 +6,7 @@ const cron = require('node-cron');
 const axios = require('axios');
 
 const bot = new Bot(process.env.BOT_API_KEY);
+const ethApi = process.env.ETH_SCAN;
 const dogApiMain = process.env.API_DOG_MAIN;
 const dogApiSasha = process.env.API_DOG_SASHA;
 const dogApiMax = process.env.API_DOG_MAX;
@@ -29,9 +30,12 @@ const menuKeyboard = new InlineKeyboard()
 	.text('Собачки', 'dogs').row()
 	.text('Котики', 'cats').row()
 	.text('Да или нет?', 'yon').row()
+	.text('Etherscan', 'eth').row()
 
 bot.command('start', async (ctx) => {
 	await ctx.react("❤")
+
+	logUniqueUser(ctx);
 
 	logMessage(ctx, "start");
 
@@ -44,15 +48,15 @@ bot.command('start', async (ctx) => {
 
 // Cron test
 
-async function sendMessageToClient() {
-	console.log("Cron job executed");
-	const chatId = process.env.CHAT_ID;
-	const message = 'Всё работает';
+// async function sendMessageToClient() {
+// 	console.log("Cron job executed");
+// 	const chatId = process.env.CHAT_ID;
+// 	const message = 'Каждую минуту';
 
-	await bot.api.sendMessage(chatId, message);
-}
+// 	await bot.api.sendMessage(chatId, message);
+// }
 
-cron.schedule('*/1 * * * *', sendMessageToClient);
+// cron.schedule('*/1 * * * *', sendMessageToClient);
 
 // Callback на собачек
 
@@ -134,9 +138,28 @@ bot.callbackQuery('yon', async (ctx) => {
 
 })
 
-// Callback Temp
+// Callback Etherscan
 
+bot.callbackQuery('eth', async (ctx) => {
+	const updatedKeyboard = new InlineKeyboard()
+		.text('Etherscan', 'eth').row()
+		.text('Да / Нет', 'yon').row()
+		.text('Теперь кошечек', 'cats').row()
+		.text('Теперь собачек', 'dogs').row();
 
+	const urlApi = ethApi
+
+	const response = await axios.get(urlApi);
+	const safeGasPrice = parseFloat(response.data.result.SafeGasPrice).toFixed(2);
+	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} выбрал "Etherscan"`);
+
+	await ctx.reply(`Etherscan: "${safeGasPrice}"`, {
+		reply_markup: updatedKeyboard,
+	})
+
+	logMessage(ctx, "Etherscan");
+
+})
 
 //API authorization temp
 
@@ -188,6 +211,38 @@ function logMessage(ctx, action) {
 		}
 	});
 }
+
+
+// Логируем уникальных пользователей
+
+function logUniqueUser(ctx) {
+	const userId = ctx.from.id;
+	const username = ctx.from.username;
+	const logFilePath = path.join(__dirname, 'Logs', 'unique_users.txt'); // путь к файлу с уникальными пользователями
+
+	fs.readFile(logFilePath, 'utf8', (err, data) => {
+		if (err) {
+			if (err.code === 'ENOENT') {
+				// Файл не существует, создаём новый файл и записываем туда пользователя
+				fs.writeFile(logFilePath, `${userId} | ${username}\n`, (err) => {
+					if (err) console.error('Ошибка при создании файла уникальных пользователей:', err);
+				});
+			} else {
+				console.error('Ошибка при чтении файла уникальных пользователей:', err);
+			}
+			return;
+		}
+
+		// Если файл существует, проверяем, содержится ли уже пользователь в файле
+		if (!data.includes(userId)) {
+			// Если пользователя нет, добавляем его в файл
+			fs.appendFile(logFilePath, `${userId} | ${username}\n`, (err) => {
+				if (err) console.error('Ошибка при записи уникального пользователя в файл:', err);
+			});
+		}
+	});
+}
+
 
 // Обработчик ошибок
 
