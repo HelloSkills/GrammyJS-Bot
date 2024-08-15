@@ -275,7 +275,7 @@ async function checkGasPrice() {
 				// await bot.api.sendMessage(userId, `Цена газа уже ниже Вашего порогового значения "${threshold}".\nТекущее значение Etherscan: ${currentGasPrice} \n \nЕсли хотите получить уведомление - задайте значение ниже текущего газа на Etherscan. \n \nУведомление отключено!`);
 
 				// Отправляем сообщение о достигнутом пороге
-				await bot.api.sendMessage(userId, `Цена газа опустилась ниже Вашего порогового значения "${threshold}".\nТекущее значение Etherscan: ${currentGasPrice} \nСпасибо за выбор нашего сервиса ❤`);
+				await bot.api.sendMessage(userId, `Цена газа опустилась ниже Вашего порогового значения: ${threshold}.\nТекущее значение Etherscan: ${currentGasPrice} \nСпасибо за выбор нашего сервиса ❤`);
 				// Удалим пороговое значение после уведомления и выполненного условия
 				delete userThresholds[userId];
 			}
