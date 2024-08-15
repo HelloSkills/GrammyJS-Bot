@@ -13,6 +13,8 @@ const dogApiMax = process.env.API_DOG_MAX;
 const dogApiNazar = process.env.API_DOG_NAZAR;
 const ynApi = process.env.API_YN;
 const chatId = process.env.CHAT_ID
+const pizdaTebe = process.env.PIZDA_TEBE
+
 
 const fs = require('fs');
 const path = require('path');
@@ -176,12 +178,12 @@ bot.callbackQuery('eth', async (ctx) => {
 // Callback на оповещение
 
 bot.callbackQuery('notification', async (ctx) => {
-	const updatedKeyboard = new InlineKeyboard()
-		.text('Etherscan', 'eth').row()
-		.text('Подписка на ETH Gwei', 'subscribe').row()
-		.text('Вернуться в главное меню', 'start').row()
+	// const updatedKeyboard = new InlineKeyboard()
+	// 	.text('Etherscan', 'eth').row()
+	// 	.text('Подписка на ETH Gwei', 'subscribe').row()
+	// 	.text('Вернуться в главное меню', 'start').row()
 
-	await ctx.reply(`Ниже какого значения Eth Gwei Вы хотите получить оповещение бота? \nОтправьте любое значение от 1`)
+	await ctx.reply(`Ниже какого значения Eth Gwei Вы хотите получить оповещение бота? \nВыберите значение Eth Gwei от 1 до 10`)
 
 	const gasButtonKeyboard = new InlineKeyboard()
 		.text('1', '1').row()
@@ -196,22 +198,43 @@ bot.callbackQuery('notification', async (ctx) => {
 		.text('10', '10')
 
 
-	await ctx.reply(`Выберите значение Eth Gwei от 1 до 10 \nЕсли необходимо значение больше - отправь цифру в чат`, {
+	await ctx.reply(`Выбери свой Eth Gwei \nЕсли необходимо значение больше 10 - отправь цифру в чат`, {
 		reply_markup: gasButtonKeyboard
 	})
-	// await ctx.reply(` `, {
-	// 	reply_markup: updatedKeyboard,
-	// })
+
 
 	logMessage(ctx, "notification");
 
 })
 
+
+// Обработчики для кнопок с цифрами
+let selectedValue = null;
+
+for (let i = 1; i <= 10; i++) {
+	bot.callbackQuery(`${i}`, async (ctx) => {
+		selectedValue = i;
+		console.log(selectedValue)
+
+
+		// Отдаём это для нашей функции
+		const userId = ctx.from.id;
+		userThresholds[userId] = selectedValue;
+
+		// Вызов функции проверки цены газа
+		await checkGasPrice();
+
+		ctx.reply(`Вы установили новое пороговое значение - ${selectedValue}.\n \nЯ сообщу Вам, когда цена газа Ethereum упадет ниже этого уровня.`)
+	});
+}
+
+
+
 //Бомбер
 
 // cron.schedule('*/1 * * * * *', async () => {
-// 	const sendUserID = chatId;
-// 	await bot.api.sendMessage(sendUserID, 'Спам);
+// 	const sendUserID = pizdaTebe;
+// 	await bot.api.sendMessage(sendUserID, 'Тебе пизда');
 // });
 
 
@@ -229,6 +252,7 @@ async function checkGasPrice() {
 
 		const status = getStatusEth(currentGasPrice)
 
+
 		console.log(`${status} Eth Gwei: ${currentGasPrice}`);
 		//Отправляем инфу о газе по расписанию крона конкретному ID
 		await bot.api.sendMessage(sendUserID, `${status} Eth Gwei ${currentGasPrice}`);
@@ -238,7 +262,7 @@ async function checkGasPrice() {
 			const threshold = userThresholds[userId];
 			if (currentGasPrice < threshold) {
 				// Отправляем уведомление пользователю
-				await bot.api.sendMessage(userId, `Цена газа уже ниже Вашего порогового значения "${threshold}".\nТекущее значение Etherscan: ${currentGasPrice}`);
+				await bot.api.sendMessage(userId, `Цена газа уже ниже Вашего порогового значения "${threshold}".\nТекущее значение Etherscan: ${currentGasPrice} \n \nЕсли хотите получить уведомление - задайте значение ниже текущего газа на Etherscan. \n \nУведомление отключено!`);
 				// Удалим пороговое значение после уведомления и выполненного условия
 				delete userThresholds[userId];
 			}
@@ -257,7 +281,7 @@ bot.on('message:text', async (ctx) => {
 	const userId = ctx.from.id;
 	let text = ctx.message.text;
 
-	console.log(text)
+	// console.log(text)
 
 
 	// Обработка запятой
@@ -266,7 +290,7 @@ bot.on('message:text', async (ctx) => {
 	// Проверяем, является ли текст числом
 	const threshold = parseFloat(text);
 
-	console.log(threshold)
+
 
 	if (isNaN(text)) {
 		await ctx.reply('Текст это конечно хорошо, но я могу работать только с газом Etherscan.\nПожалуйста, введите число, чтобы установить пороговое значение для газа Ethereum.')
@@ -303,8 +327,10 @@ bot.on('message:text', async (ctx) => {
 
 			await ctx.reply(`Вы установили новое пороговое значение - ${threshold}.\n \nЯ сообщу Вам, когда цена газа Ethereum упадет ниже этого уровня.`);
 		}
+	} else if (threshold < 1) {
+		await ctx.reply('Eth Gwei не может быть меньше 1 \nВыберите диапазон 1 ~ 100');
 	} else {
-		await ctx.reply('Eth Gwei не может быть меньше 1 \nУкажите любое значение от 1 до 100');
+		await ctx.reply('Выберите интервал в диапазоне от 1 до 100')
 	}
 
 	logMessage(ctx);
