@@ -13,6 +13,8 @@ const dogApiMax = process.env.API_DOG_MAX;
 const dogApiNazar = process.env.API_DOG_NAZAR;
 const ynApi = process.env.API_YN;
 const chatId = process.env.CHAT_ID
+
+//Bomb
 const pizdaTebe = process.env.PIZDA_TEBE
 
 
@@ -54,18 +56,6 @@ bot.command('start', async (ctx) => {
 	});
 });
 
-// Cron test
-
-// async function sendMessageToClient() {
-// 	console.log("Cron job executed");
-// 	const chatId = process.env.CHAT_ID;
-// 	const message = 'Каждую минуту';
-
-// 	await bot.api.sendMessage(chatId, message);
-// }
-
-// cron.schedule('*/1 * * * *', sendMessageToClient);
-
 // Callback на собачек
 
 bot.callbackQuery('dogs', async (ctx) => {
@@ -101,9 +91,7 @@ bot.callbackQuery('dogs', async (ctx) => {
 		reply_markup: updatedKeyboard,
 	})
 
-
 })
-
 
 // Callback на котиков
 
@@ -165,8 +153,6 @@ bot.callbackQuery('eth', async (ctx) => {
 	const status = getStatusEth(safeGasPrice)
 	console.log(`Пользователь ${ctx.from.username} и ID: ${ctx.from.id} выбрал "Etherscan"`);
 
-
-
 	await ctx.reply(`${status} Eth Gwei: ${safeGasPrice}`, {
 		reply_markup: updatedKeyboard,
 	})
@@ -178,10 +164,7 @@ bot.callbackQuery('eth', async (ctx) => {
 // Callback на оповещение
 
 bot.callbackQuery('notification', async (ctx) => {
-	// const updatedKeyboard = new InlineKeyboard()
-	// 	.text('Etherscan', 'eth').row()
-	// 	.text('Подписка на ETH Gwei', 'subscribe').row()
-	// 	.text('Вернуться в главное меню', 'start').row()
+
 
 	await ctx.reply(`Ниже какого значения Eth Gwei Вы хотите получить оповещение бота? \nВыберите значение Eth Gwei от 1 до 10`)
 
@@ -202,8 +185,7 @@ bot.callbackQuery('notification', async (ctx) => {
 		reply_markup: gasButtonKeyboard
 	})
 
-
-	logMessage(ctx, "notification");
+	logMessage(ctx, "Notification");
 
 })
 
@@ -222,14 +204,41 @@ for (let i = 1; i <= 10; i++) {
 		userThresholds[userId] = selectedValue;
 
 		// Вызов функции проверки цены газа
-		await checkGasPrice();
 
-		ctx.reply(`Вы установили новое пороговое значение - ${selectedValue}.\n \nЯ сообщу Вам, когда цена газа Ethereum упадет ниже этого уровня.`)
+
+		console.log(`Пользователь ${ctx.from.username} установил пороговое значение: ${selectedValue}`);
+
+		// Проверяем текущую цену газа
+		const response = await axios.get(ethApi);
+		const currentGasPrice = parseFloat(response.data.result.SafeGasPrice).toFixed(2);
+
+		// Если текущее значение газа больше порогового, отправляем сообщение
+		if (currentGasPrice > selectedValue) {
+			await ctx.reply(`Вы установили новое пороговое значение - ${selectedValue}.\nЯ сообщу Вам, когда цена газа Ethereum упадет ниже этого уровня.`);
+			logMessage(ctx, `оповещение при Eth Gwei ${selectedValue}`);
+		} else {
+			await ctx.reply(`Вы установили новое пороговое значение - ${selectedValue}. \nОднако текущее значение газа ниже установленного порога, и уведомления Вам не будут отправляться.`);
+			logMessage(ctx, `пороговое значение ${selectedValue} установлено, но текущее значение газа ниже.`);
+		}
+		logMessage(ctx, `оповещение при Eth Gwei ${selectedValue}`);
 	});
 }
 
 
+// Callback на подписку
 
+bot.callbackQuery('subscribe', async (ctx) => {
+
+	const subscribeKeyboard = new InlineKeyboard()
+		.text('Включить подписку', 'true')
+		.text('Отключить подписку', 'false')
+
+	await ctx.reply(`Хотите получать оповещение по газу каждую минуту? \nВы можете включить и отключить отписку в любое время`, {
+		reply_markup: subscribeKeyboard
+	})
+
+	logMessage(ctx, "subscribe");
+})
 //Бомбер
 
 // cron.schedule('*/1 * * * * *', async () => {
@@ -244,6 +253,7 @@ async function checkGasPrice() {
 		const sendUserID = chatId
 		const response = await axios.get(ethApi);
 		const currentGasPrice = parseFloat(response.data.result.SafeGasPrice).toFixed(2);
+
 
 		//Проверка на логирование
 		if (Object.keys(userThresholds).length > 0) {
@@ -261,8 +271,8 @@ async function checkGasPrice() {
 		for (const userId in userThresholds) {
 			const threshold = userThresholds[userId];
 			if (currentGasPrice < threshold) {
-				// Отправляем уведомление пользователю
-				await bot.api.sendMessage(userId, `Цена газа уже ниже Вашего порогового значения "${threshold}".\nТекущее значение Etherscan: ${currentGasPrice} \n \nЕсли хотите получить уведомление - задайте значение ниже текущего газа на Etherscan. \n \nУведомление отключено!`);
+				// Отправляем уведомление пользователю (вырублено, так как уже отправляем в кнопках)
+				// await bot.api.sendMessage(userId, `Цена газа уже ниже Вашего порогового значения "${threshold}".\nТекущее значение Etherscan: ${currentGasPrice} \n \nЕсли хотите получить уведомление - задайте значение ниже текущего газа на Etherscan. \n \nУведомление отключено!`);
 				// Удалим пороговое значение после уведомления и выполненного условия
 				delete userThresholds[userId];
 			}
