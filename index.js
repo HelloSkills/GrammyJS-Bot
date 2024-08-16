@@ -28,6 +28,10 @@ const thresholdsFilePath = path.join(__dirname, 'Logs', 'userThresholds.json');
 
 const userThresholds = {};
 
+const subscribeFilePath = path.join(__dirname, 'Logs', 'userSubscribe.json');
+
+const userSubscriptions = {};
+
 
 // Вешаем команды и их описание
 
@@ -228,17 +232,51 @@ for (let i = 1; i <= 10; i++) {
 // Callback на подписку
 
 bot.callbackQuery('subscribe', async (ctx) => {
+	const userId = ctx.from.id;
 
+	// Кнопки для включения и отключения подписки
 	const subscribeKeyboard = new InlineKeyboard()
-		.text('Включить подписку', 'true')
-		.text('Отключить подписку', 'false')
+		.text('Включить подписку', 'subscribe_true')
+		.text('Отключить подписку', 'subscribe_false');
 
-	await ctx.reply(`Хотите получать оповещение по газу каждую минуту? \nВы можете включить и отключить отписку в любое время`, {
+	await ctx.reply('Хотите получать оповещение по газу каждую минуту? Вы можете включить и отключить отписку в любое время', {
 		reply_markup: subscribeKeyboard
-	})
+	});
 
 	logMessage(ctx, "subscribe");
-})
+});
+
+bot.callbackQuery('subscribe_true', async (ctx) => {
+	const userId = ctx.from.id;
+
+	if (!userSubscriptions[userId]) {
+		userSubscriptions[userId] = { subscribed: true };
+	} else {
+		userSubscriptions[userId].subscribed = true;
+	}
+
+	saveSubscriptionsToFile();
+
+	await ctx.reply('Вы включили подписку на уведомления по цене газа Ethereum.');
+	logMessage(ctx, "subscribe_true");
+});
+
+bot.callbackQuery('subscribe_false', async (ctx) => {
+	const userId = ctx.from.id;
+
+	if (!userSubscriptions[userId]) {
+		userSubscriptions[userId] = { subscribed: false };
+	} else {
+		userSubscriptions[userId].subscribed = false;
+	}
+
+	saveSubscriptionsToFile();
+
+	await ctx.reply('Вы отключили подписку на уведомления по цене газа Ethereum.');
+	logMessage(ctx, "subscribe_false");
+});
+
+
 //Бомбер
 
 // cron.schedule('*/1 * * * * *', async () => {
@@ -253,7 +291,7 @@ async function checkGasPrice() {
 		const sendUserID = chatId;
 		const response = await axios.get(ethApi);
 		const currentGasPrice = parseFloat(response.data.result.SafeGasPrice).toFixed(2);
-
+		const status = getStatusEth(currentGasPrice);
 		// Проверяем всех пользователей, установивших пороговое значение
 		for (const userId in userThresholds) {
 			const threshold = userThresholds[userId];
@@ -265,13 +303,22 @@ async function checkGasPrice() {
 			}
 		}
 
-		// Сохранение в файл после удаления
+		// Проверяем подписчиков
+		for (const userId in userSubscriptions) {
+			if (userSubscriptions[userId].subscribed) {
+				await bot.api.sendMessage(userId, `${status} ${currentGasPrice}  ~  Eth Gwei`);
+			}
+		}
+
+		// Сохранение в файл после удаления порога
 		saveThresholdsToFile();
+		saveSubscriptionsToFile();
 
 	} catch (error) {
 		console.error('Ошибка при проверке цены газа:', error);
 	}
 }
+
 // Пример cron-задачи, которая будет проверять цену каждые 5 минут
 cron.schedule('*/1 * * * *', checkGasPrice);
 
@@ -408,6 +455,31 @@ function loadThresholdsFromFile() {
 
 // Загрузка данных из файла при старте бота
 loadThresholdsFromFile();
+
+// Функция для сохранения данных о подписке в файл
+function saveSubscriptionsToFile() {
+	try {
+		fs.writeFileSync(subscribeFilePath, JSON.stringify(userSubscriptions, null, 2));
+	} catch (err) {
+		console.error('Error saving subscriptions to file:', err);
+	}
+}
+
+// Функция для загрузки данных о подписке из файла
+function loadSubscriptionsFromFile() {
+	try {
+		if (fs.existsSync(subscribeFilePath)) {
+			const data = fs.readFileSync(subscribeFilePath, 'utf8');
+			Object.assign(userSubscriptions, JSON.parse(data));
+		}
+	} catch (err) {
+		console.error('Error loading subscriptions from file:', err);
+	}
+}
+
+// Загрузка данных о подписках при старте бота
+loadSubscriptionsFromFile();
+
 
 // Логируем уникальных пользователей
 

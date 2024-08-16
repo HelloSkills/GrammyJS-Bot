@@ -1,3 +1,3 @@
 {
-	"ignore": ["userThresholds.json"]
+	"ignore": ["userThresholds.json","userSubscribe.json"]
 }
