@@ -12,7 +12,7 @@ const dogApiSasha = process.env.API_DOG_SASHA;
 const dogApiMax = process.env.API_DOG_MAX;
 const dogApiNazar = process.env.API_DOG_NAZAR;
 const ynApi = process.env.API_YN;
-const chatId = process.env.CHAT_ID
+// const chatId = process.env.CHAT_ID
 
 //Bomb
 const pizdaTebe = process.env.PIZDA_TEBE
@@ -288,7 +288,6 @@ bot.callbackQuery('subscribe_false', async (ctx) => {
 
 async function checkGasPrice() {
 	try {
-		const sendUserID = chatId;
 		const response = await axios.get(ethApi);
 		const currentGasPrice = parseFloat(response.data.result.SafeGasPrice).toFixed(2);
 		const status = getStatusEth(currentGasPrice);
