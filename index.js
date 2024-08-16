@@ -200,16 +200,9 @@ for (let i = 1; i <= 10; i++) {
 		selectedValue = i;
 		console.log(selectedValue)
 
-
-
 		// Отдаём это для нашей функции
 		const userId = ctx.from.id;
 		userThresholds[userId] = selectedValue;
-
-		// Сохраняем обновленные значения в файл
-		saveThresholdsToFile();
-
-		console.log(`Пользователь ${ctx.from.username} установил пороговое значение: ${selectedValue}`);
 
 		// Проверяем текущую цену газа
 		const response = await axios.get(ethApi);
@@ -218,11 +211,18 @@ for (let i = 1; i <= 10; i++) {
 		// Если текущее значение газа больше порогового, отправляем сообщение
 		if (currentGasPrice > selectedValue) {
 			await ctx.reply(`Вы установили новое пороговое значение - ${selectedValue}.\nЯ сообщу Вам, когда цена газа Ethereum упадет ниже этого уровня.`);
-			logMessage(ctx, `оповещение при Eth Gwei ${selectedValue}`);
+
+			// Сохраняем обновленные значения в файл только если текущее значение газа больше порогового
+			saveThresholdsToFile();
+
+			console.log(`Пользователь ${ctx.from.username} установил пороговое значение: ${selectedValue}`);
 		} else {
 			await ctx.reply(`Вы установили новое пороговое значение - ${selectedValue}. \nОднако текущее значение газа ниже установленного порога, и уведомления Вам не будут отправляться.`);
-			logMessage(ctx, `пороговое значение ${selectedValue} установлено, но текущее значение газа ниже.`);
+			delete userThresholds[userId]; // Удаляем пороговое значение, так как оно не актуально
+
+			console.log(`Пороговое значение ${selectedValue} установлено, но текущее значение газа ниже.`);
 		}
+
 		logMessage(ctx, `оповещение при Eth Gwei ${selectedValue}`);
 	});
 }
@@ -297,38 +297,26 @@ bot.on('message:text', async (ctx) => {
 	const userId = ctx.from.id;
 	let text = ctx.message.text;
 
-	// console.log(text)
-
-
 	// Обработка запятой
 	text = text.replace(',', '.');
 
 	// Проверяем, является ли текст числом
 	const threshold = parseFloat(text);
 
-
-
-	if (isNaN(text)) {
-		await ctx.reply('Текст это конечно хорошо, но я могу работать только с газом Etherscan.\nПожалуйста, введите число, чтобы установить пороговое значение для газа Ethereum.')
+	if (isNaN(threshold)) {
+		await ctx.reply('Текст это конечно хорошо, но я могу работать только с газом Etherscan.\nПожалуйста, введите число, чтобы установить пороговое значение для газа Ethereum.');
 		logMessage(ctx);
-		return
+		return;
 	}
 
-
-	if (!isNaN(threshold) && threshold >= 1 && threshold <= 100) {
+	if (threshold >= 1 && threshold <= 100) {
 		// Получаем текущую цену газа
 		const response = await axios.get(ethApi);
 		const currentGasPrice = parseFloat(response.data.result.SafeGasPrice).toFixed(2);
-		console.log(`Текущее значение Etherscan: ${currentGasPrice}`);
 
 		// Проверяем, не ниже ли уже текущая цена газа, чем введенное значение
 		if (currentGasPrice < threshold) {
-			// Если новое значение больше текущей цены газа, удаляем пороговое значение пользователя
-			if (userThresholds[userId] !== undefined) {
-				console.log(`Пороговое значение ${userThresholds[userId]} для пользователя ${ctx.from.username} удалено, так как текущее значение газа ниже порога.`);
-				delete userThresholds[userId];
-			}
-
+			// Если текущее значение газа ниже порога, выводим сообщение и не сохраняем пороговое значение
 			await ctx.reply(`Цена газа уже ниже Вашего порогового значения "${threshold}".\nТекущее значение Etherscan: ${currentGasPrice} \n \nЕсли хотите получить уведомление - задайте значение ниже текущего газа на Etherscan. \n \nУведомление отключено!`);
 		} else {
 			// Если пороговое значение для пользователя уже существует, удаляем его
@@ -341,15 +329,17 @@ bot.on('message:text', async (ctx) => {
 			userThresholds[userId] = threshold;
 			console.log(`Пользователь ${ctx.from.username} установил новое пороговое значение: ${threshold}`);
 
-			// Добавляем вызов функции сохранения в файл
-			saveThresholdsToFile();
+			// Сохраняем новое пороговое значение только если оно удовлетворяет условию
+			if (currentGasPrice >= threshold) {
+				saveThresholdsToFile();
+			}
 
 			await ctx.reply(`Вы установили новое пороговое значение - ${threshold}.\n \nЯ сообщу Вам, когда цена газа Ethereum упадет ниже этого уровня.`);
 		}
 	} else if (threshold < 1) {
 		await ctx.reply('Eth Gwei не может быть меньше 1 \nВыберите диапазон 1 ~ 100');
 	} else {
-		await ctx.reply('Выберите интервал в диапазоне от 1 до 100')
+		await ctx.reply('Выберите интервал в диапазоне от 1 до 100');
 	}
 
 	logMessage(ctx);
