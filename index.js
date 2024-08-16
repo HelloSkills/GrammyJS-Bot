@@ -24,7 +24,7 @@ const path = require('path');
 bot.use(hydrate());
 
 // Путь к файлу, где будем хранить userThresholds
-const thresholdsFilePath = path.join(__dirname, 'userThresholds.json');
+const thresholdsFilePath = path.join(__dirname, 'Logs', 'userThresholds.json');
 
 const userThresholds = {};
 
@@ -282,6 +282,8 @@ bot.on('message:text', async (ctx) => {
 	const userId = ctx.from.id;
 	let text = ctx.message.text;
 
+	console.log(`Пользователь ${ctx.from.username} отправил: ${ctx.message.text}`)
+
 	// Обработка запятой
 	text = text.replace(',', '.');
 
@@ -385,7 +387,7 @@ function logMessage(ctx, action) {
 function saveThresholdsToFile() {
 	try {
 		fs.writeFileSync(thresholdsFilePath, JSON.stringify(userThresholds, null, 2));
-		console.log('Thresholds saved to file.');
+		// console.log('Thresholds saved to file.');
 	} catch (err) {
 		console.error('Error saving thresholds to file:', err);
 	}
@@ -397,7 +399,7 @@ function loadThresholdsFromFile() {
 		if (fs.existsSync(thresholdsFilePath)) {
 			const data = fs.readFileSync(thresholdsFilePath, 'utf8');
 			Object.assign(userThresholds, JSON.parse(data));
-			console.log('Thresholds loaded from file.');
+			// console.log('Thresholds loaded from file.');
 		}
 	} catch (err) {
 		console.error('Error loading thresholds from file:', err);
