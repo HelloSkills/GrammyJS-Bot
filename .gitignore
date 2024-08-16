@@ -2,3 +2,4 @@
 *.env
 /Logs
 temp.js
+userThresholds.json

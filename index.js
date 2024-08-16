@@ -21,10 +21,12 @@ const pizdaTebe = process.env.PIZDA_TEBE
 const fs = require('fs');
 const path = require('path');
 
-const userThresholds = {};
-
 bot.use(hydrate());
 
+// Путь к файлу, где будем хранить userThresholds
+const thresholdsFilePath = path.join(__dirname, 'userThresholds.json');
+
+const userThresholds = {};
 
 
 // Вешаем команды и их описание
@@ -199,12 +201,13 @@ for (let i = 1; i <= 10; i++) {
 		console.log(selectedValue)
 
 
+
 		// Отдаём это для нашей функции
 		const userId = ctx.from.id;
 		userThresholds[userId] = selectedValue;
 
-		// Вызов функции проверки цены газа
-
+		// Сохраняем обновленные значения в файл
+		saveThresholdsToFile();
 
 		console.log(`Пользователь ${ctx.from.username} установил пороговое значение: ${selectedValue}`);
 
@@ -263,9 +266,9 @@ async function checkGasPrice() {
 		const status = getStatusEth(currentGasPrice)
 
 
-		console.log(`${status} Eth Gwei: ${currentGasPrice}`);
+		// console.log(`${status} ${currentGasPrice} Eth Gwei`);
 		//Отправляем инфу о газе по расписанию крона конкретному ID
-		await bot.api.sendMessage(sendUserID, `${status} Eth Gwei ${currentGasPrice}`);
+		await bot.api.sendMessage(sendUserID, `${status} ${currentGasPrice}  ~  Eth Gwei`);
 
 		// Проверяем всех пользователей, установивших пороговое значение
 		for (const userId in userThresholds) {
@@ -338,6 +341,9 @@ bot.on('message:text', async (ctx) => {
 			userThresholds[userId] = threshold;
 			console.log(`Пользователь ${ctx.from.username} установил новое пороговое значение: ${threshold}`);
 
+			// Добавляем вызов функции сохранения в файл
+			saveThresholdsToFile();
+
 			await ctx.reply(`Вы установили новое пороговое значение - ${threshold}.\n \nЯ сообщу Вам, когда цена газа Ethereum упадет ниже этого уровня.`);
 		}
 	} else if (threshold < 1) {
@@ -401,6 +407,32 @@ function logMessage(ctx, action) {
 	});
 }
 
+
+// Функция для сохранения данных в файл
+function saveThresholdsToFile() {
+	try {
+		fs.writeFileSync(thresholdsFilePath, JSON.stringify(userThresholds, null, 2));
+		console.log('Thresholds saved to file.');
+	} catch (err) {
+		console.error('Error saving thresholds to file:', err);
+	}
+}
+
+// Функция для загрузки данных из файла
+function loadThresholdsFromFile() {
+	try {
+		if (fs.existsSync(thresholdsFilePath)) {
+			const data = fs.readFileSync(thresholdsFilePath, 'utf8');
+			Object.assign(userThresholds, JSON.parse(data));
+			console.log('Thresholds loaded from file.');
+		}
+	} catch (err) {
+		console.error('Error loading thresholds from file:', err);
+	}
+}
+
+// Загрузка данных из файла при старте бота
+loadThresholdsFromFile();
 
 // Логируем уникальных пользователей
 
