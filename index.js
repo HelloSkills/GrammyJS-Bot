@@ -232,7 +232,7 @@ for (let i = 1; i <= 10; i++) {
 // Callback на подписку
 
 bot.callbackQuery('subscribe', async (ctx) => {
-	const userId = ctx.from.id;
+	// const userId = ctx.from.id;
 
 	// Кнопки для включения и отключения подписки
 	const subscribeKeyboard = new InlineKeyboard()
@@ -247,12 +247,19 @@ bot.callbackQuery('subscribe', async (ctx) => {
 });
 
 bot.callbackQuery('subscribe_true', async (ctx) => {
-	const userId = ctx.from.id;
+	const userId = ctx.from.id
+
+
 
 	if (!userSubscriptions[userId]) {
-		userSubscriptions[userId] = { subscribed: true };
+		userSubscriptions[userId] = { userName: `${ctx.from.username}`, subscribed: true };
+		console.log(userSubscriptions[userId])
+
+
 	} else {
+		userSubscriptions[userId].userName = ctx.from.username;
 		userSubscriptions[userId].subscribed = true;
+		console.log(userSubscriptions[userId])
 	}
 
 	saveSubscriptionsToFile();
@@ -429,7 +436,7 @@ function logMessage(ctx, action) {
 }
 
 
-// Функция для сохранения данных в файл
+// Функция для сохранения выставленного газа в файл
 function saveThresholdsToFile() {
 	try {
 		fs.writeFileSync(thresholdsFilePath, JSON.stringify(userThresholds, null, 2));
@@ -439,7 +446,7 @@ function saveThresholdsToFile() {
 	}
 }
 
-// Функция для загрузки данных из файла
+// Функция для загрузки значений о газе от пользхователей из файла
 function loadThresholdsFromFile() {
 	try {
 		if (fs.existsSync(thresholdsFilePath)) {
